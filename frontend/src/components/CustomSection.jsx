@@ -81,8 +81,11 @@ function EntryEditor({ entry, onChange, onDelete, onMoveUp, onMoveDown, isFirst,
   const onDescKeyDown = (e) => {
     if (completion.suggestion && e.key === 'Tab') {
       e.preventDefault()
-      const addition = completion.accept()
-      onChange({ ...entry, description: (entry.description || '') + addition })
+      const current = entry.description || ''
+      // Respect the textarea's maxLength: a provider response can exceed the
+      // remaining capacity, so truncate the accepted addition to fit 500.
+      const addition = completion.accept().slice(0, Math.max(0, 500 - current.length))
+      onChange({ ...entry, description: current + addition })
     } else if (e.key === 'Escape' && completion.suggestion) {
       e.preventDefault()
       completion.dismiss()

@@ -26,6 +26,9 @@ export default function useAICompletion({ sectionName, field = 'description', en
   const cancelPending = useCallback(() => {
     if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null }
     if (abortRef.current) { abortRef.current.abort(); abortRef.current = null }
+    // Clearing abortRef means the aborted request's finally can't reset loading,
+    // so reset it here — otherwise the UI can stay stuck on "Thinking…".
+    setLoading(false)
   }, [])
 
   const dismiss = useCallback(() => {
