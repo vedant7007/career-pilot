@@ -95,6 +95,14 @@ function EntryEditor({ entry, onChange, onDelete, onMoveUp, onMoveDown, isFirst,
   // Shared typography so the ghost-text mirror lines up with the textarea.
   const descTypography = 'px-3 py-2 text-sm leading-[1.4] whitespace-pre-wrap break-words'
 
+  // Keep the ghost-text mirror scrolled in lockstep with the textarea so the
+  // suggestion stays aligned once the content grows past the visible rows.
+  const taRef = useRef(null)
+  const mirrorRef = useRef(null)
+  const syncScroll = () => {
+    if (mirrorRef.current && taRef.current) mirrorRef.current.scrollTop = taRef.current.scrollTop
+  }
+
   return (
     <div className="border border-border/50 rounded-xl overflow-hidden bg-muted/30 group/entry">
       {/* Entry header */}
@@ -204,6 +212,7 @@ function EntryEditor({ entry, onChange, onDelete, onMoveUp, onMoveDown, isFirst,
                 textarea would need a caret-anchored overlay instead. */}
             <div className="relative">
               <div
+                ref={mirrorRef}
                 aria-hidden="true"
                 className={cn(
                   descTypography,
@@ -216,10 +225,12 @@ function EntryEditor({ entry, onChange, onDelete, onMoveUp, onMoveDown, isFirst,
                 )}
               </div>
               <textarea
+                ref={taRef}
                 rows={2}
                 value={entry.description}
                 onChange={onDescChange}
                 onKeyDown={onDescKeyDown}
+                onScroll={syncScroll}
                 onBlur={completion.dismiss}
                 maxLength={500}
                 placeholder="Brief description (optional)"
@@ -230,11 +241,11 @@ function EntryEditor({ entry, onChange, onDelete, onMoveUp, onMoveDown, isFirst,
               />
             </div>
             <div className="flex items-center justify-between mt-1">
-              <span className="text-xs text-muted-foreground italic">
+              <span className="text-xs text-muted-foreground italic" role="status" aria-live="polite">
                 {completion.loading
                   ? 'Thinking…'
                   : completion.suggestion
-                    ? 'Press Tab to accept · Esc to dismiss'
+                    ? 'AI suggestion available — press Tab to accept · Esc to dismiss'
                     : ''}
               </span>
               <span
